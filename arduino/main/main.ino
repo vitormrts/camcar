@@ -10,8 +10,8 @@
 #include "movement_constants.h"
 #include "pin_constants.h"
 
-Servo panServo;
-Servo tiltServo;
+Servo bottomServo;
+Servo topServo;
 
 struct MOTOR_PINS
 {
@@ -142,18 +142,18 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
         </td>   
       </tr>
       <tr>
-        <td style="text-align:left"><b>Pan:</b></td>
+        <td style="text-align:left"><b>Bottom Servo:</b></td>
         <td colspan=2>
          <div class="slidecontainer">
-            <input type="range" min="0" max="180" value="90" class="slider" id="Pan" oninput='sendButtonInput("Pan",value)'>
+            <input type="range" min="0" max="180" value="90" class="slider" id="Bottom" oninput='sendButtonInput("Bottom",value)'>
           </div>
         </td>
       </tr> 
       <tr>
-        <td style="text-align:left"><b>Tilt:</b></td>
+        <td style="text-align:left"><b>Top Servo:</b></td>
         <td colspan=2>
           <div class="slidecontainer">
-            <input type="range" min="0" max="180" value="90" class="slider" id="Tilt" oninput='sendButtonInput("Tilt",value)'>
+            <input type="range" min="0" max="180" value="90" class="slider" id="Top" oninput='sendButtonInput("Top",value)'>
           </div>
         </td>   
       </tr>      
@@ -185,8 +185,8 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
         {
           sendButtonInput("Speed", document.getElementById("Speed").value);
           sendButtonInput("Light", document.getElementById("Light").value);
-          sendButtonInput("Pan", document.getElementById("Pan").value);
-          sendButtonInput("Tilt", document.getElementById("Tilt").value);                    
+          sendButtonInput("Bottom", document.getElementById("Bottom").value);
+          sendButtonInput("Top", document.getElementById("Top").value);                    
         };
         websocketCarInput.onclose   = function(event){setTimeout(initCarInputWebSocket, 2000);};
         websocketCarInput.onmessage = function(event){};        
@@ -297,8 +297,8 @@ void onCarInputWebSocketEvent(AsyncWebSocket *server,
       Serial.printf("WebSocket client #%u disconnected\n", client->id());
       moveCar(0);
       ledcWrite(PWMLightChannel, 0); 
-      panServo.write(90);
-      tiltServo.write(90);       
+      bottomServo.write(90);
+      topServo.write(90);       
       break;
     case WS_EVT_DATA:
       AwsFrameInfo *info;
@@ -325,13 +325,13 @@ void onCarInputWebSocketEvent(AsyncWebSocket *server,
         {
           ledcWrite(PWMLightChannel, valueInt);         
         }
-        else if (key == "Pan")
+        else if (key == "Bottom")
         {
-          panServo.write(valueInt);
+          bottomServo.write(valueInt);
         }
-        else if (key == "Tilt")
+        else if (key == "Top")
         {
-          tiltServo.write(valueInt);   
+          topServo.write(valueInt);   
         }             
       }
       break;
@@ -449,9 +449,8 @@ void sendCameraPicture()
 
 void setUpPinModes()
 {
-  Serial.println('setupPinModes');
-  panServo.attach(PAN_PIN);
-  tiltServo.attach(TILT_PIN);
+  bottomServo.attach(BOTTOM_SERVO_PIN);
+  topServo.attach(TOP_SERVO_PIN);
 
   //Set up PWM
   ledcSetup(PWMSpeedChannel, PWMFreq, PWMResolution);
