@@ -22,7 +22,7 @@ struct MOTOR_PINS
 
 std::vector<MOTOR_PINS> motorPins = 
 {
-  {2, 12, 13}, //RIGHT_MOTOR Pins (EnA, IN1, IN2)
+  {14, 26, 27}, //RIGHT_MOTOR Pins (EnA, IN1, IN2)
   {2, 1, 3},  //LEFT_MOTOR  Pins (EnB, IN3, IN4)
 };
 
@@ -449,6 +449,7 @@ void sendCameraPicture()
 
 void setUpPinModes()
 {
+  Serial.printf("Setup pins");
   bottomServo.attach(BOTTOM_SERVO_PIN);
   topServo.attach(TOP_SERVO_PIN);
 
