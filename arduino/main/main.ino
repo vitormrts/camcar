@@ -1,4 +1,3 @@
-#include "esp_camera.h"
 #include <Arduino.h>
 #include <WiFi.h>
 #include <AsyncTCP.h>
@@ -6,7 +5,6 @@
 #include <iostream>
 #include <sstream>
 #include <ESP32Servo.h>
-#include "camera_constants.h"
 #include "movement_constants.h"
 #include "pin_constants.h"
 
@@ -31,13 +29,11 @@ const int PWMResolution = 8;
 const int PWMSpeedChannel = 2;
 const int PWMLightChannel = 3;
 
-const char* ssid     = "MyWiFiCar";
-const char* password = "12345678";
+const char* ssid = "LilyGo-CAM-C8:2B";
+const char* password = "";
 
 AsyncWebServer server(80);
-AsyncWebSocket wsCamera("/Camera");
 AsyncWebSocket wsCarInput("/CarInput");
-uint32_t cameraClientId = 0;
 
 const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
 <!DOCTYPE html>
@@ -107,7 +103,7 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
   <body class="noselect" align="center" style="background-color:white">
     <table id="mainTable" style="width:400px;margin:auto;table-layout:fixed" CELLSPACING=10>
       <tr>
-        <img id="cameraImage" src="" style="width:400px;height:250px"></td>
+        <img id="cameraImage" src="http://192.168.4.1:81/stream" style="width:400px;height:250px"></td>
       </tr> 
       <tr>
         <td></td>
@@ -160,23 +156,8 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
     </table>
   
     <script>
-      var webSocketCameraUrl = "ws:\/\/" + window.location.hostname + "/Camera";
       var webSocketCarInputUrl = "ws:\/\/" + window.location.hostname + "/CarInput";      
-      var websocketCamera;
       var websocketCarInput;
-      
-      function initCameraWebSocket() 
-      {
-        websocketCamera = new WebSocket(webSocketCameraUrl);
-        websocketCamera.binaryType = 'blob';
-        websocketCamera.onopen    = function(event){};
-        websocketCamera.onclose   = function(event){setTimeout(initCameraWebSocket, 2000);};
-        websocketCamera.onmessage = function(event)
-        {
-          var imageId = document.getElementById("cameraImage");
-          imageId.src = URL.createObjectURL(event.data);
-        };
-      }
       
       function initCarInputWebSocket() 
       {
@@ -194,7 +175,6 @@ const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
       
       function initWebSocket() 
       {
-        initCameraWebSocket ();
         initCarInputWebSocket();
       }
 
@@ -343,113 +323,10 @@ void onCarInputWebSocketEvent(AsyncWebSocket *server,
   }
 }
 
-void onCameraWebSocketEvent(AsyncWebSocket *server, 
-                      AsyncWebSocketClient *client, 
-                      AwsEventType type,
-                      void *arg, 
-                      uint8_t *data, 
-                      size_t len) 
-{                      
-  switch (type) 
-  {
-    case WS_EVT_CONNECT:
-      Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-      cameraClientId = client->id();
-      break;
-    case WS_EVT_DISCONNECT:
-      Serial.printf("WebSocket client #%u disconnected\n", client->id());
-      cameraClientId = 0;
-      break;
-    case WS_EVT_DATA:
-      break;
-    case WS_EVT_PONG:
-    case WS_EVT_ERROR:
-      break;
-    default:
-      break;  
-  }
-}
-
-void setupCamera()
-{
-  camera_config_t config;
-  config.ledc_channel = LEDC_CHANNEL_4;
-  config.ledc_timer = LEDC_TIMER_2;
-  config.pin_d0 = Y2_GPIO_NUM;
-  config.pin_d1 = Y3_GPIO_NUM;
-  config.pin_d2 = Y4_GPIO_NUM;
-  config.pin_d3 = Y5_GPIO_NUM;
-  config.pin_d4 = Y6_GPIO_NUM;
-  config.pin_d5 = Y7_GPIO_NUM;
-  config.pin_d6 = Y8_GPIO_NUM;
-  config.pin_d7 = Y9_GPIO_NUM;
-  config.pin_xclk = XCLK_GPIO_NUM;
-  config.pin_pclk = PCLK_GPIO_NUM;
-  config.pin_vsync = VSYNC_GPIO_NUM;
-  config.pin_href = HREF_GPIO_NUM;
-  config.pin_sscb_sda = SIOD_GPIO_NUM;
-  config.pin_sscb_scl = SIOC_GPIO_NUM;
-  config.pin_pwdn = PWDN_GPIO_NUM;
-  config.pin_reset = RESET_GPIO_NUM;
-  config.xclk_freq_hz = 20000000;
-  config.pixel_format = PIXFORMAT_JPEG;
-  
-  config.frame_size = FRAMESIZE_VGA;
-  config.jpeg_quality = 10;
-  config.fb_count = 1;
-
-  // camera init
-  esp_err_t err = esp_camera_init(&config);
-  if (err != ESP_OK) 
-  {
-    Serial.printf("Camera init failed with error 0x%x", err);
-    return;
-  }  
-
-  if (psramFound())
-  {
-    heap_caps_malloc_extmem_enable(20000);  
-    Serial.printf("PSRAM initialized. malloc to take memory from psram above this size");    
-  }  
-}
-
-void sendCameraPicture()
-{
-  if (cameraClientId == 0)
-  {
-    return;
-  }
-  unsigned long  startTime1 = millis();
-  //capture a frame
-  camera_fb_t * fb = esp_camera_fb_get();
-  if (!fb) 
-  {
-      Serial.println("Frame buffer could not be acquired");
-      return;
-  }
-
-  unsigned long  startTime2 = millis();
-  wsCamera.binary(cameraClientId, fb->buf, fb->len);
-  esp_camera_fb_return(fb);
-    
-  //Wait for message to be delivered
-  while (true)
-  {
-    AsyncWebSocketClient * clientPointer = wsCamera.client(cameraClientId);
-    if (!clientPointer || !(clientPointer->queueIsFull()))
-    {
-      break;
-    }
-    delay(1);
-  }
-  
-  unsigned long  startTime3 = millis();  
-  Serial.printf("Time taken Total: %d|%d|%d\n",startTime3 - startTime1, startTime2 - startTime1, startTime3-startTime2 );
-}
-
 void setUpPinModes()
 {
-  Serial.printf("Setup pins");
+  Serial.println("Setup pins");
+  delay(1000);
   bottomServo.attach(BOTTOM_SERVO_PIN);
   topServo.attach(TOP_SERVO_PIN);
 
@@ -459,12 +336,16 @@ void setUpPinModes()
       
   for (int i = 0; i < motorPins.size(); i++)
   {
-    pinMode(motorPins[i].pinEn, OUTPUT);    
-    pinMode(motorPins[i].pinIN1, OUTPUT);
-    pinMode(motorPins[i].pinIN2, OUTPUT);  
-    /* Attach the PWM Channel to the motor enb Pin */
-    ledcAttachPin(motorPins[i].pinEn, PWMSpeedChannel);
+     pinMode(motorPins[i].pinEn, OUTPUT);    
+     pinMode(motorPins[i].pinIN1, OUTPUT);
+     pinMode(motorPins[i].pinIN2, OUTPUT);  
+     /* Attach the PWM Channel to the motor enb Pin */
+     ledcAttachPin(motorPins[i].pinEn, PWMSpeedChannel);
   }
+
+  delay(1000);
+
+  Serial.println("Done pins!");
   moveCar(STOP);
 
   pinMode(LIGHT_PIN, OUTPUT);    
@@ -475,33 +356,37 @@ void setUpPinModes()
 void setup(void) 
 {
   Serial.begin(115200);
+  Serial.println("Conectando em ");
+  Serial.println(ssid);
+  delay(500);
+
+  // Conectar ao Access Point
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("Conectado ao WiFi!");
+  Serial.println("Endereço de IP: ");
+  Serial.println(WiFi.localIP());
+
   setUpPinModes();
-  
-  WiFi.softAP(ssid, password);
-  IPAddress IP = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(IP);
 
   server.on("/", HTTP_GET, handleRoot);
   server.onNotFound(handleNotFound);
-      
-  wsCamera.onEvent(onCameraWebSocketEvent);
-  server.addHandler(&wsCamera);
 
   wsCarInput.onEvent(onCarInputWebSocketEvent);
   server.addHandler(&wsCarInput);
 
   server.begin();
   Serial.println("HTTP server started");
-
-  //setupCamera();
 }
-
 
 void loop() 
 {
-  //wsCamera.cleanupClients(); 
-  //wsCarInput.cleanupClients(); 
-  //sendCameraPicture(); 
-  //Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
+  wsCarInput.cleanupClients(); 
+  Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
 }
