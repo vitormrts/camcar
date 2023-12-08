@@ -256,11 +256,6 @@ void handleRoot(AsyncWebServerRequest *request)
   request->send_P(200, "text/html", htmlHomePage);
 }
 
-void handleNotFound(AsyncWebServerRequest *request) 
-{
-    request->send(404, "text/plain", "File Not Found");
-}
-
 void onCarInputWebSocketEvent(AsyncWebSocket *server, 
                       AsyncWebSocketClient *client, 
                       AwsEventType type,
@@ -336,11 +331,11 @@ void setUpPinModes()
       
   for (int i = 0; i < motorPins.size(); i++)
   {
-     pinMode(motorPins[i].pinEn, OUTPUT);    
-     pinMode(motorPins[i].pinIN1, OUTPUT);
-     pinMode(motorPins[i].pinIN2, OUTPUT);  
-     /* Attach the PWM Channel to the motor enb Pin */
-     ledcAttachPin(motorPins[i].pinEn, PWMSpeedChannel);
+    pinMode(motorPins[i].pinEn, OUTPUT);    
+    pinMode(motorPins[i].pinIN1, OUTPUT);
+    pinMode(motorPins[i].pinIN2, OUTPUT);  
+    /* Attach the PWM Channel to the motor enb Pin */
+    ledcAttachPin(motorPins[i].pinEn, PWMSpeedChannel);
   }
 
   delay(1000);
@@ -376,7 +371,6 @@ void setup(void)
   setUpPinModes();
 
   server.on("/", HTTP_GET, handleRoot);
-  server.onNotFound(handleNotFound);
 
   wsCarInput.onEvent(onCarInputWebSocketEvent);
   server.addHandler(&wsCarInput);
@@ -387,6 +381,6 @@ void setup(void)
 
 void loop() 
 {
-  wsCarInput.cleanupClients(); 
-  Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
+  //wsCarInput.cleanupClients(); 
+  //Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
 }
