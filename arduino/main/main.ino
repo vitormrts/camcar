@@ -6,38 +6,35 @@
 #include <iostream>
 #include <sstream>
 
-// Define constants
-#define BOTTOM_SERVO_PIN 18
-#define TOP_SERVO_PIN 19
+/*Arrows*/
 #define UP 1
 #define DOWN 2
 #define LEFT 3
 #define RIGHT 4
 #define STOP 0
-#define RIGHT_MOTOR 0
-#define LEFT_MOTOR 1
+
 #define FORWARD 1
 #define BACKWARD -1
 
-// CAM (access point) credentials
-const char* ssid = "LilyGo-CAM-C8:2B";
-const char* password = "";
+/*Right Motor*/
+#define RIGHT_MOTOR_FORWARD  26  //pin1
+#define RIGHT_MOTOR_BACKWARD 27 //pin2
+#define RIGHT_MOTOR_EN 14
+
+/*Left Motor*/
+#define LETF_MOTOR_FORWARD 1 //pin3
+#define LEFT_MOTOR_BACKWARD 3  //pin4
+#define LEFT_MOTOR_EN 2
+
+/*Servos*/
+#define BOTTOM_SERVO_PIN 18
+#define TOP_SERVO_PIN 19
+
+//#define LIGHT_PIN 4
+
 
 Servo bottomServo;
 Servo topServo;
-
-struct MOTOR_PINS
-{
-  int pinEn;  
-  int pinIN1;
-  int pinIN2;    
-};
-
-std::vector<MOTOR_PINS> motorPins = 
-{
-  {14, 26, 27}, //RIGHT_MOTOR Pins (EnA, IN1, IN2)
-  {15, 22, 23},  //LEFT_MOTOR  Pins (EnB, IN3, IN4)
-};
 
 const int PWMFreq = 1000; /* 1 KHz */
 const int PWMResolution = 8;
@@ -229,57 +226,69 @@ const char index_html[] PROGMEM = R"HTMLHOMEPAGE(
 </html>
 )HTMLHOMEPAGE";
 
-void rotateMotor(int motorNumber, int motorDirection)
-{
-  if (motorDirection == FORWARD)
-  {
-    digitalWrite(motorPins[motorNumber].pinIN1, HIGH);
-    digitalWrite(motorPins[motorNumber].pinIN2, LOW);    
-  }
-  else if (motorDirection == BACKWARD)
-  {
-    digitalWrite(motorPins[motorNumber].pinIN1, LOW);
-    digitalWrite(motorPins[motorNumber].pinIN2, HIGH);     
-  }
-  else
-  {
-    digitalWrite(motorPins[motorNumber].pinIN1, LOW);
-    digitalWrite(motorPins[motorNumber].pinIN2, LOW);       
-  }
-}
-
 void moveCar(int inputValue)
 {
+  Serial.printf("Got value as %d\n", inputValue);  
   switch(inputValue)
   {
+
     case UP:
-      rotateMotor(RIGHT_MOTOR, FORWARD);
-      rotateMotor(LEFT_MOTOR, FORWARD);                  
+      digitalWrite(RIGHT_MOTOR_EN, HIGH);
+      digitalWrite(LEFT_MOTOR_EN, HIGH);
+      digitalWrite(RIGHT_MOTOR_FORWARD, HIGH);
+      digitalWrite(LETF_MOTOR_FORWARD, HIGH);
+      digitalWrite(RIGHT_MOTOR_BACKWARD, LOW);
+      digitalWrite(LEFT_MOTOR_BACKWARD, LOW);
+      Serial.println("Forward");
       break;
   
     case DOWN:
-      rotateMotor(RIGHT_MOTOR, BACKWARD);
-      rotateMotor(LEFT_MOTOR, BACKWARD);  
+      digitalWrite(RIGHT_MOTOR_EN, HIGH);
+      digitalWrite(LEFT_MOTOR_EN, HIGH);
+      digitalWrite(RIGHT_MOTOR_BACKWARD, HIGH);
+      digitalWrite(LEFT_MOTOR_BACKWARD, HIGH);  
+      digitalWrite(RIGHT_MOTOR_FORWARD, LOW);
+      digitalWrite(LETF_MOTOR_FORWARD, LOW);
+      Serial.println("Backward");
       break;
   
     case LEFT:
-      rotateMotor(RIGHT_MOTOR, FORWARD);
-      rotateMotor(LEFT_MOTOR, BACKWARD);  
+      digitalWrite(RIGHT_MOTOR_EN, HIGH);
+      digitalWrite(LEFT_MOTOR_EN, HIGH);
+      digitalWrite(LEFT_MOTOR_BACKWARD, HIGH);
+      digitalWrite(RIGHT_MOTOR_FORWARD, HIGH);
+      digitalWrite(LETF_MOTOR_FORWARD, LOW);
+      digitalWrite(RIGHT_MOTOR_BACKWARD, LOW);
+      Serial.println("Left");  
       break;
   
     case RIGHT:
-      rotateMotor(RIGHT_MOTOR, BACKWARD);
-      rotateMotor(LEFT_MOTOR, FORWARD); 
+      digitalWrite(RIGHT_MOTOR_EN, HIGH);
+      digitalWrite(LEFT_MOTOR_EN, HIGH);
+      digitalWrite(RIGHT_MOTOR_BACKWARD, HIGH);
+      digitalWrite(LETF_MOTOR_FORWARD, HIGH);
+      digitalWrite(RIGHT_MOTOR_FORWARD, LOW);
+      digitalWrite(LEFT_MOTOR_BACKWARD, LOW);
+      Serial.println("Right");
       break;
  
     case STOP:
-      rotateMotor(RIGHT_MOTOR, STOP);
-      rotateMotor(LEFT_MOTOR, STOP);    
+      digitalWrite(RIGHT_MOTOR_EN, LOW);
+      digitalWrite(LEFT_MOTOR_EN, LOW);
+      digitalWrite(RIGHT_MOTOR_BACKWARD, LOW);
+      digitalWrite(LETF_MOTOR_FORWARD, LOW);
+      digitalWrite(RIGHT_MOTOR_FORWARD, LOW);
+      digitalWrite(LEFT_MOTOR_BACKWARD, LOW);
+      Serial.println("Stop");    
       break;
   
     default:
-      rotateMotor(RIGHT_MOTOR, STOP);
-      rotateMotor(LEFT_MOTOR, STOP);    
+      digitalWrite(RIGHT_MOTOR_EN, LOW);
+      digitalWrite(LEFT_MOTOR_EN, LOW);
+      digitalWrite(RIGHT_MOTOR_BACKWARD, LOW);
+      digitalWrite(LETF_MOTOR_FORWARD, LOW);
+      digitalWrite(RIGHT_MOTOR_FORWARD, LOW);
+      digitalWrite(LEFT_MOTOR_BACKWARD, LOW);   
       break;
   }
 }
@@ -344,25 +353,29 @@ void webSocketEventHandler(AsyncWebSocket *server,
 
 void setupPins()
 {
-  Serial.println("Setup pins...");
-
+  Serial.println("Setup pins");
+  delay(1000);
   bottomServo.attach(BOTTOM_SERVO_PIN);
   topServo.attach(TOP_SERVO_PIN);
 
+  //Set up PWM
   ledcSetup(PWMSpeedChannel, PWMFreq, PWMResolution);
-      
-  for (int i = 0; i < motorPins.size(); i++)
-  {
-    pinMode(motorPins[i].pinEn, OUTPUT);
-    Serial.printf("Setting pin %d as output\n", motorPins[i].pinEn);
-    pinMode(motorPins[i].pinIN1, OUTPUT);
-    Serial.printf("Setting pin %d as output\n", motorPins[i].pinIN1);
-    pinMode(motorPins[i].pinIN2, OUTPUT);
-    Serial.printf("Setting pin %d as output\n", motorPins[i].pinIN2);
-   
-    Serial.printf("Attaching pin %d to channel %d\n", motorPins[i].pinEn, PWMSpeedChannel);
-    ledcAttachPin(motorPins[i].pinEn, PWMSpeedChannel);
-  }
+  ledcSetup(PWMLightChannel, PWMFreq, PWMResolution);
+
+
+  /*Setup right motor (1)*/
+  pinMode(RIGHT_MOTOR_FORWARD, OUTPUT);
+  pinMode(RIGHT_MOTOR_BACKWARD, OUTPUT);
+  pinMode(RIGHT_MOTOR_EN, OUTPUT);
+
+  /*Setup left motor (2)*/
+  pinMode(LETF_MOTOR_FORWARD, OUTPUT);
+  pinMode(LEFT_MOTOR_BACKWARD, OUTPUT);
+  pinMode(LEFT_MOTOR_EN, OUTPUT);
+
+  delay(1000);
+
+  Serial.println("Done pins!");
 
   moveCar(STOP);
 }
