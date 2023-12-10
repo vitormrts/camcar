@@ -1,4 +1,0 @@
-#define BOTTOM_SERVO_PIN 18
-#define TOP_SERVO_PIN 19
-
-#define LIGHT_PIN 4

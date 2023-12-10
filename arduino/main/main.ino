@@ -1,12 +1,27 @@
-#include <Arduino.h>
+// Import required libraries
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <ESP32Servo.h>
 #include <iostream>
 #include <sstream>
-#include <ESP32Servo.h>
-#include "movement_constants.h"
-#include "pin_constants.h"
+
+// Define constants
+#define BOTTOM_SERVO_PIN 18
+#define TOP_SERVO_PIN 19
+#define UP 1
+#define DOWN 2
+#define LEFT 3
+#define RIGHT 4
+#define STOP 0
+#define RIGHT_MOTOR 0
+#define LEFT_MOTOR 1
+#define FORWARD 1
+#define BACKWARD -1
+
+// CAM (access point) credentials
+const char* ssid = "LilyGo-CAM-C8:2B";
+const char* password = "";
 
 Servo bottomServo;
 Servo topServo;
@@ -21,178 +36,198 @@ struct MOTOR_PINS
 std::vector<MOTOR_PINS> motorPins = 
 {
   {14, 26, 27}, //RIGHT_MOTOR Pins (EnA, IN1, IN2)
-  {2, 1, 3},  //LEFT_MOTOR  Pins (EnB, IN3, IN4)
+  {15, 22, 23},  //LEFT_MOTOR  Pins (EnB, IN3, IN4)
 };
 
 const int PWMFreq = 1000; /* 1 KHz */
 const int PWMResolution = 8;
 const int PWMSpeedChannel = 2;
-const int PWMLightChannel = 3;
-
-const char* ssid = "LilyGo-CAM-C8:2B";
-const char* password = "";
 
 AsyncWebServer server(80);
-AsyncWebSocket wsCarInput("/CarInput");
+AsyncWebSocket ws("/ws");
 
-const char* htmlHomePage PROGMEM = R"HTMLHOMEPAGE(
+const char index_html[] PROGMEM = R"HTMLHOMEPAGE(
 <!DOCTYPE html>
 <html>
   <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <style>
-    .arrows {
-      font-size:30px;
-      color:red;
-    }
-    td.button {
-      background-color:black;
-      border-radius:25%;
-      box-shadow: 5px 5px #888888;
-    }
-    td.button:active {
-      transform: translate(5px,5px);
-      box-shadow: none; 
-    }
+      body {
+        user-select: none;
+        background-color: #fcfcfc;
+        font-family: sans-serif;
+      }
 
-    .noselect {
-      user-select: none;
-    }
+      p {
+        margin: 0 0 8px;
+      }
 
-    .slidecontainer {
-      width: 100%;
-    }
+      img {
+        display: block;
+        margin: 0 auto 32px;
+        height: auto;
+        width: 450px;
+      }
 
-    .slider {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 15px;
-      border-radius: 5px;
-      background: #d3d3d3;
-      outline: none;
-      opacity: 0.7;
-      -webkit-transition: .2s;
-      transition: opacity .2s;
-    }
+      .container {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+      }
 
-    .slider:hover {
-      opacity: 1;
-    }
-  
-    .slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 25px;
-      height: 25px;
-      border-radius: 50%;
-      background: red;
-      cursor: pointer;
-    }
+      .controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
 
-    .slider::-moz-range-thumb {
-      width: 25px;
-      height: 25px;
-      border-radius: 50%;
-      background: red;
-      cursor: pointer;
-    }
+      button {
+        background: transparent;
+        border: none;
+      }
 
+      .sliders {
+        width: 50%;
+      }
+
+      .slide-container {
+        width: 100%;
+      }
+
+      .slider {
+        width: 100%;
+        height: 15px;
+        border-radius: 5px;
+        background: #d3d3d3;
+        outline: none;
+        opacity: 0.7;
+        -webkit-transition: .2s;
+        transition: opacity .2s;
+      }
+
+      .slider:hover {
+        opacity: 1;
+      }
+
+      .cross-control {
+        margin-left: 55px;
+      }
+
+      .cross-center{
+        background-color: #333333;
+        width: 55px;
+        height: 55px;
+        position: relative;
+      }
+
+      .cross-circle{
+        background-color: #292929;
+        width: 45px;
+        height: 45px;
+        position: absolute;
+        border-radius: 100%;
+        margin-top: 5px;
+        margin-left: 5px;
+      }
+
+      .cross-top{
+        background-color: #333333;
+        width: 55px;
+        height: 55px;
+        position: absolute;
+        border-radius: 15%;
+        margin-top: -40px;
+      }
+
+      .cross-bottom{
+        background-color: #333333;
+        width: 55px;
+        height: 55px;
+        position: absolute;
+        border-radius: 15%;
+        margin-top: 40px;
+      }
+
+      .cross-left{
+        background-color: #333333;
+        width: 55px;
+        height: 55px;
+        position: absolute;
+        border-radius: 15%;
+        margin-left: -40px;
+      }
+
+      .cross-right{
+        background-color: #333333;
+        width: 55px;
+        height: 55px;
+        position: absolute;
+        border-radius: 15%;
+        margin-left: 40px;
+      }
     </style>
-  
   </head>
-  <body class="noselect" align="center" style="background-color:white">
-    <table id="mainTable" style="width:400px;margin:auto;table-layout:fixed" CELLSPACING=10>
-      <tr>
-        <img id="cameraImage" src="http://192.168.4.1:81/stream" style="width:400px;height:250px"></td>
-      </tr> 
-      <tr>
-        <td></td>
-        <td class="button" ontouchstart='sendButtonInput("MoveCar","1")' ontouchend='sendButtonInput("MoveCar","0")'><span class="arrows" >&#8679;</span></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td class="button" ontouchstart='sendButtonInput("MoveCar","3")' ontouchend='sendButtonInput("MoveCar","0")'><span class="arrows" >&#8678;</span></td>
-        <td class="button"></td>    
-        <td class="button" ontouchstart='sendButtonInput("MoveCar","4")' ontouchend='sendButtonInput("MoveCar","0")'><span class="arrows" >&#8680;</span></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td class="button" ontouchstart='sendButtonInput("MoveCar","2")' ontouchend='sendButtonInput("MoveCar","0")'><span class="arrows" >&#8681;</span></td>
-        <td></td>
-      </tr>
-      <tr/><tr/>
-      <tr>
-        <td style="text-align:left"><b>Speed:</b></td>
-        <td colspan=2>
-         <div class="slidecontainer">
-            <input type="range" min="0" max="255" value="150" class="slider" id="Speed" oninput='sendButtonInput("Speed",value)'>
+  <body>
+    <div class ="container">
+      <img src="http://192.168.4.1:81/stream"></td>
+      <div class="controls">
+        <div class="cross-control">
+          <div class="cross-center">
+            <button onclick='sendData("MoveCar","1")' class="cross-top"></button>
+            <button onclick='sendData("MoveCar","2")' class="cross-bottom"></button>
+            <button onclick='sendData("MoveCar","3")' class="cross-left"></button>
+            <button onclick='sendData("MoveCar","4")' class="cross-right"></button>
+            <button class="cross-circle"></button>
           </div>
-        </td>
-      </tr>        
-      <tr>
-        <td style="text-align:left"><b>Light:</b></td>
-        <td colspan=2>
-          <div class="slidecontainer">
-            <input type="range" min="0" max="255" value="0" class="slider" id="Light" oninput='sendButtonInput("Light",value)'>
+        </div>
+        <div class="sliders">
+          <p>Velocidade</p>
+          <div class="slide-container">
+              <input type="range" min="0" max="255" value="150" class="slider" id="Speed" oninput='sendData("Speed",value)'>
           </div>
-        </td>   
-      </tr>
-      <tr>
-        <td style="text-align:left"><b>Bottom Servo:</b></td>
-        <td colspan=2>
-         <div class="slidecontainer">
-            <input type="range" min="0" max="180" value="90" class="slider" id="Bottom" oninput='sendButtonInput("Bottom",value)'>
-          </div>
-        </td>
-      </tr> 
-      <tr>
-        <td style="text-align:left"><b>Top Servo:</b></td>
-        <td colspan=2>
-          <div class="slidecontainer">
-            <input type="range" min="0" max="180" value="90" class="slider" id="Top" oninput='sendButtonInput("Top",value)'>
-          </div>
-        </td>   
-      </tr>      
-    </table>
-  
-    <script>
-      var webSocketCarInputUrl = "ws:\/\/" + window.location.hostname + "/CarInput";      
-      var websocketCarInput;
-      
-      function initCarInputWebSocket() 
-      {
-        websocketCarInput = new WebSocket(webSocketCarInputUrl);
-        websocketCarInput.onopen    = function(event)
-        {
-          sendButtonInput("Speed", document.getElementById("Speed").value);
-          sendButtonInput("Light", document.getElementById("Light").value);
-          sendButtonInput("Bottom", document.getElementById("Bottom").value);
-          sendButtonInput("Top", document.getElementById("Top").value);                    
-        };
-        websocketCarInput.onclose   = function(event){setTimeout(initCarInputWebSocket, 2000);};
-        websocketCarInput.onmessage = function(event){};        
-      }
-      
-      function initWebSocket() 
-      {
-        initCarInputWebSocket();
-      }
-
-      function sendButtonInput(key, value) 
-      {
-        var data = key + "," + value;
-        websocketCarInput.send(data);
-      }
     
-      window.onload = initWebSocket;
-      document.getElementById("mainTable").addEventListener("touchend", function(event){
-        event.preventDefault()
-      });      
-    </script>
+          <p>Servo Inferior</p>
+          <div class="slide-container">
+            <input type="range" min="0" max="180" value="90" class="slider" id="Bottom" oninput='sendData("Bottom",value)'>
+          </div>
+    
+          <p>Servo Superior</p>
+          <div class="slide-container">
+            <input type="range" min="0" max="180" value="90" class="slider" id="Top" oninput='sendData("Top",value)'>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      var websocket;
+
+	    window.addEventListener('load', function() {
+        websocket = new WebSocket(`ws://${window.location.hostname}/ws`);
+
+        websocket.onopen = function(event) {
+          console.log('Connection established');
+        }
+
+        websocket.onclose = function(event) {
+          console.log('Connection died');
+        }
+
+        websocket.onerror = function(error) {
+          console.log('error');
+        };
+
+        websocket.onmessage = function(event) {};
+      });
+
+      function sendData(key, value) {
+        var data = key + "," + value;
+        websocket.send(data);
+        console.log(data);
+      }
+	  </script>
   </body>    
 </html>
 )HTMLHOMEPAGE";
-
 
 void rotateMotor(int motorNumber, int motorDirection)
 {
@@ -215,10 +250,8 @@ void rotateMotor(int motorNumber, int motorDirection)
 
 void moveCar(int inputValue)
 {
-  Serial.printf("Got value as %d\n", inputValue);  
   switch(inputValue)
   {
-
     case UP:
       rotateMotor(RIGHT_MOTOR, FORWARD);
       rotateMotor(LEFT_MOTOR, FORWARD);                  
@@ -251,12 +284,7 @@ void moveCar(int inputValue)
   }
 }
 
-void handleRoot(AsyncWebServerRequest *request) 
-{
-  request->send_P(200, "text/html", htmlHomePage);
-}
-
-void onCarInputWebSocketEvent(AsyncWebSocket *server, 
+void webSocketEventHandler(AsyncWebSocket *server, 
                       AsyncWebSocketClient *client, 
                       AwsEventType type,
                       void *arg, 
@@ -270,8 +298,8 @@ void onCarInputWebSocketEvent(AsyncWebSocket *server,
       break;
     case WS_EVT_DISCONNECT:
       Serial.printf("WebSocket client #%u disconnected\n", client->id());
+
       moveCar(0);
-      ledcWrite(PWMLightChannel, 0); 
       bottomServo.write(90);
       topServo.write(90);       
       break;
@@ -296,10 +324,6 @@ void onCarInputWebSocketEvent(AsyncWebSocket *server,
         {
           ledcWrite(PWMSpeedChannel, valueInt);
         }
-        else if (key == "Light")
-        {
-          ledcWrite(PWMLightChannel, valueInt);         
-        }
         else if (key == "Bottom")
         {
           bottomServo.write(valueInt);
@@ -318,69 +342,62 @@ void onCarInputWebSocketEvent(AsyncWebSocket *server,
   }
 }
 
-void setUpPinModes()
+void setupPins()
 {
-  Serial.println("Setup pins");
-  delay(1000);
+  Serial.println("Setup pins...");
+
   bottomServo.attach(BOTTOM_SERVO_PIN);
   topServo.attach(TOP_SERVO_PIN);
 
-  //Set up PWM
   ledcSetup(PWMSpeedChannel, PWMFreq, PWMResolution);
-  ledcSetup(PWMLightChannel, PWMFreq, PWMResolution);
       
   for (int i = 0; i < motorPins.size(); i++)
   {
-    pinMode(motorPins[i].pinEn, OUTPUT);    
+    pinMode(motorPins[i].pinEn, OUTPUT);
+    Serial.printf("Setting pin %d as output\n", motorPins[i].pinEn);
     pinMode(motorPins[i].pinIN1, OUTPUT);
-    pinMode(motorPins[i].pinIN2, OUTPUT);  
-    /* Attach the PWM Channel to the motor enb Pin */
+    Serial.printf("Setting pin %d as output\n", motorPins[i].pinIN1);
+    pinMode(motorPins[i].pinIN2, OUTPUT);
+    Serial.printf("Setting pin %d as output\n", motorPins[i].pinIN2);
+   
+    Serial.printf("Attaching pin %d to channel %d\n", motorPins[i].pinEn, PWMSpeedChannel);
     ledcAttachPin(motorPins[i].pinEn, PWMSpeedChannel);
   }
 
-  delay(1000);
-
-  Serial.println("Done pins!");
   moveCar(STOP);
-
-  pinMode(LIGHT_PIN, OUTPUT);    
-  ledcAttachPin(LIGHT_PIN, PWMLightChannel);
 }
 
-
-void setup(void) 
-{
+void setup(){
+  // Serial port for debugging purposes
   Serial.begin(115200);
-  Serial.println("Conectando em ");
+
+  setupPins();
+
+  Serial.print("Connecting to ");
   Serial.println(ssid);
-  delay(500);
-
-  // Conectar ao Access Point
+  
+  // Connect to Wi-Fi
   WiFi.begin(ssid, password);
-
+  
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    delay(1000);
     Serial.print(".");
   }
-
+  
   Serial.println("");
-  Serial.println("Conectado ao WiFi!");
-  Serial.println("Endereço de IP: ");
-  Serial.println(WiFi.localIP());
+  Serial.println("Connected..!");
+  Serial.print("Got IP: ");  Serial.println(WiFi.localIP());
 
-  setUpPinModes();
+  ws.onEvent(webSocketEventHandler);
+  server.addHandler(&ws);
 
-  server.on("/", HTTP_GET, handleRoot);
-
-  wsCarInput.onEvent(onCarInputWebSocketEvent);
-  server.addHandler(&wsCarInput);
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/html", index_html);
+  });
 
   server.begin();
-  Serial.println("HTTP server started");
 }
 
-void loop() 
-{
-  //wsCarInput.cleanupClients(); 
-  //Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
+void loop() {
+  ws.cleanupClients();
 }
