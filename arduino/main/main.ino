@@ -1,4 +1,3 @@
-// Import required libraries
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -263,13 +262,13 @@ void moveCar(int inputValue)
       break;
   
     case LEFT:
-      rotateMotor(RIGHT_MOTOR, FORWARD);
-      rotateMotor(LEFT_MOTOR, BACKWARD);  
+      rotateMotor(RIGHT_MOTOR, BACKWARD);
+      rotateMotor(LEFT_MOTOR, FORWARD);  
       break;
   
     case RIGHT:
-      rotateMotor(RIGHT_MOTOR, BACKWARD);
-      rotateMotor(LEFT_MOTOR, FORWARD); 
+      rotateMotor(RIGHT_MOTOR, FORWARD);
+      rotateMotor(LEFT_MOTOR, BACKWARD); 
       break;
  
     case STOP:
