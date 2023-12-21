@@ -31,6 +31,7 @@ O WebCar é controlado por meio de uma página web. Com isso, o usuário pode te
 - Possuir a Arduino IDE para utilização do ESP32 https://randomnerdtutorials.com/getting-started-with-esp32/
 
 ## Organização e Arquitetura
+<img src="./assets/esquema.png" />
 ### Diagrama de Arquitetura
 ### Conexões
 ### Comunicação
