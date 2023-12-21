@@ -34,8 +34,8 @@ struct MOTOR_PINS
 
 std::vector<MOTOR_PINS> motorPins = 
 {
-  {14, 26, 27}, //RIGHT_MOTOR Pins (EnA, IN1, IN2)
-  {15, 22, 23},  //LEFT_MOTOR  Pins (EnB, IN3, IN4)
+  {14, 26, 27}, // Left motor (EnA, IN1, IN2)
+  {15, 22, 23},  // Right motor (EnB, IN3, IN4)
 };
 
 const int PWMFreq = 1000; /* 1 KHz */
@@ -172,17 +172,17 @@ const char index_html[] PROGMEM = R"HTMLHOMEPAGE(
       <div class="controls">
         <div class="cross-control">
           <div class="cross-center">
-            <button onclick='sendData("MoveCar","1")' class="cross-top"></button>
-            <button onclick='sendData("MoveCar","2")' class="cross-bottom"></button>
-            <button onclick='sendData("MoveCar","3")' class="cross-left"></button>
-            <button onclick='sendData("MoveCar","4")' class="cross-right"></button>
-            <button class="cross-circle"></button>
+            <button onmousedown='sendData("MoveCar","1")' onmouseup='sendData("MoveCar","0")' class="cross-top"></button>
+            <button onmousedown='sendData("MoveCar","2")' onmouseup='sendData("MoveCar","0")' class="cross-bottom"></button>
+            <button onmousedown='sendData("MoveCar","3")' onmouseup='sendData("MoveCar","0")' class="cross-left"></button>
+            <button onmousedown='sendData("MoveCar","4")' onmouseup='sendData("MoveCar","0")' class="cross-right"></button>
+            <button onclick='sendData("MoveCar","0")' class="cross-circle"></button>
           </div>
         </div>
         <div class="sliders">
-          <p>Velocidade</p>
+          <p>Servo Superior</p>
           <div class="slide-container">
-              <input type="range" min="0" max="255" value="150" class="slider" id="Speed" oninput='sendData("Speed",value)'>
+            <input type="range" min="0" max="180" value="90" class="slider" id="Top" oninput='sendData("Top",value)'>
           </div>
     
           <p>Servo Inferior</p>
@@ -190,10 +190,6 @@ const char index_html[] PROGMEM = R"HTMLHOMEPAGE(
             <input type="range" min="0" max="180" value="90" class="slider" id="Bottom" oninput='sendData("Bottom",value)'>
           </div>
     
-          <p>Servo Superior</p>
-          <div class="slide-container">
-            <input type="range" min="0" max="180" value="90" class="slider" id="Top" oninput='sendData("Top",value)'>
-          </div>
         </div>
       </div>
     </div>
@@ -249,6 +245,7 @@ void rotateMotor(int motorNumber, int motorDirection)
 
 void moveCar(int inputValue)
 {
+  ledcWrite(PWMSpeedChannel, 255);
   switch(inputValue)
   {
     case UP:
@@ -273,7 +270,7 @@ void moveCar(int inputValue)
  
     case STOP:
       rotateMotor(RIGHT_MOTOR, STOP);
-      rotateMotor(LEFT_MOTOR, STOP);    
+      rotateMotor(LEFT_MOTOR, STOP);
       break;
   
     default:
@@ -318,10 +315,6 @@ void webSocketEventHandler(AsyncWebSocket *server,
         if (key == "MoveCar")
         {
           moveCar(valueInt);        
-        }
-        else if (key == "Speed")
-        {
-          ledcWrite(PWMSpeedChannel, valueInt);
         }
         else if (key == "Bottom")
         {
@@ -376,16 +369,22 @@ void setup(){
   Serial.println(ssid);
   
   // Connect to Wi-Fi
-  WiFi.begin(ssid, password);
+  // WiFi.begin(ssid, password);
   
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.print(".");
-  }
+  // while (WiFi.status() != WL_CONNECTED) {
+  //   delay(1000);
+  //   Serial.print(".");
+  // }
   
-  Serial.println("");
-  Serial.println("Connected..!");
-  Serial.print("Got IP: ");  Serial.println(WiFi.localIP());
+  // Serial.println("");
+  // Serial.println("Connected..!");
+  // Serial.print("Got IP: ");  Serial.println(WiFi.localIP());
+
+  WiFi.softAP(ssid, password);
+
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(IP);
 
   ws.onEvent(webSocketEventHandler);
   server.addHandler(&ws);

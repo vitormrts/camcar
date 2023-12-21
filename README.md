@@ -24,6 +24,7 @@ O WebCar é controlado por meio de uma página web. Com isso, o usuário pode te
 | Roda Boba Nylon          | 1          |
 | Power Bank 5V            | 1          |
 | Chassi MDF               | 2          |
+| Jumpers                  | x          |
 
 ### Requisitos de software
 - Possuir o projeto "clonado" em sua máquina;
@@ -33,6 +34,7 @@ O WebCar é controlado por meio de uma página web. Com isso, o usuário pode te
 ### Diagrama de Arquitetura
 ### Conexões
 ### Comunicação
+### Bibliotecas externas
 
 ## Considerações finais
 ### Dificuldades encontradas
