@@ -63,7 +63,7 @@ Simplificadamente, é a placa principal do projeto, o ESP32 possui o maior códi
 #### Ponte H
 <img src="./assets/ponteh.jpg">
 <br>
-Esse componente,Driver Motor Ponte H, é responsável por receber os sinais enviados pelo ESP32 e controlar os motores. Para isso, usamos as portas OUT para energia dos motores, os inputs e enables para gerenciamento o "esp" identifcar para qual motor está mandando sinal.
+O componente Driver Motor Ponte H é responsável por receber os sinais enviados pelo ESP32 e controlar os motores. Para isso, usamos as portas OUT para energia dos motores, os inputs e enables para gerenciamento o "esp" identifcar para qual motor está mandando sinal.
 <br>
 
 #### Servos Motores
@@ -90,6 +90,8 @@ São utilizadas diversas bibliotecas para suporte a funcionalidades específicas
 - ESPAsyncWebServer.h: Implementa um servidor web assíncrono para o ESP32.
 - ESP32Servo.h: Facilita o controle de servos motores no ESP32.
 - iostream e sstream: Utilizadas para manipulação de strings.
+
+Para acessar as bibliotecas [clique aqui](./esp32/libraries/)
 
 ~~~C
 #include <WiFi.h>
@@ -118,7 +120,7 @@ Definimos diversas constantes que representam pinos, direções e valores espec�
 ~~~
 
 ### Configuração de Rede
-As credenciais do ponto de acesso (Access Point - AP) são definidas nas variáveis ssid e password. O dispositivo ESP32 é configurado para conectar como ao AP da câmera.
+As credenciais do ponto de acesso (Access Point - AP) são definidas nas variáveis ssid e password. O dispositivo ESP32 é configurado para conectar ao AP da câmera.
 
 ~~~C
 const char* ssid = "LilyGo-CAM-C8:2B";
@@ -135,7 +137,7 @@ AsyncWebSocket ws("/ws");
 ~~~
 
 ### Página Web
-A interface web é definida como uma string HTML na variável index_html. Ela contém controles para movimentação do carrinho, controle do servo superior e inferior, e exibição de uma transmissão de vídeo. Os controles são atualizados utilizando WebSocket para enviar comandos para o ESP32.
+A interface web contém controles para movimentação do carrinho, controle do servo superior e inferior, e exibição da transmissão de vídeo a partir da câmera. Os controles são atualizados utilizando WebSocket para enviar comandos para o ESP32.
 
 ~~~html
 const char index_html[] PROGMEM = R"HTMLHOMEPAGE(
@@ -320,6 +322,18 @@ const char index_html[] PROGMEM = R"HTMLHOMEPAGE(
 
 ### Funções de Controle de Motores e Servos
 **rotateMotor(int motorNumber, int motorDirection)**: Controla a direção de rotação de um motor DC, com base no número do motor e na direção desejada.
+
+Parâmetros:
+- **motorNumber**: Identifica qual motor está sendo controlado.
+- **motorDirection**: Indica a direção desejada para o motor.
+
+Controle da direção do motor:
+- Se a direção desejada (**motorDirection**) for "*para frente*" (**FORWARD**), a função ativa o pino do motor controlado (**motorNumber**) para girar no sentido horário.
+- Se a direção for "*para trás*" (**BACKWARD**), a função ativa o pino do motor controlado (**motorNumber**) para girar no sentido anti-horário.
+- Se a direção não for para frente ou para trás, ambos os pinos são desativados, parando o motor.
+
+Uso da função digitalWrite:
+- A função digitalWrite é utilizada para configurar um estado **HIGH** ou **LOW** dos pinos, isto é, para ativar ou desativar os pinos de controle do motor.
 
 ~~~C
 void rotateMotor(int motorNumber, int motorDirection)
