@@ -57,7 +57,7 @@ O WebCar é controlado por meio de uma página web. Com isso, o usuário pode te
 ### Componentes físicos
 #### ESP32
 <img src="./assets/esp32.jpg">
-Simplificadamente, é a placa principal do projeto, o ESP32 possui o maior código e mais funções no projeto, tendo responsabilidade de conectar na rede Wifi gerada pela câmera, a partir desta conexão, cria uma página web com a imagem transmitida pela câmera e os botões, esses serão o modo que o usuário utilizará para interagir o carrinho, pois o ESP32 recebe o comando dos botões e com isso envia o sinal para os motores (DC) e servos motores.
+Simplificadamente, é a placa principal do projeto, o ESP32 possui o maior código e mais funções no projeto, tendo responsabilidade de conectar na rede Wifi gerada pela câmera, a partir desta conexão, cria uma página web com a imagem transmitida pela câmera e os botões, esses serão o modo que o usuário utilizará para interagir o carrinho, pois o ESP32 recebe o comando dos botões e com isso envia o sinal para os motores (DC) e servos motores utilizando a comunicação WebSocket.
 <br>
 
 #### Ponte H
@@ -79,6 +79,26 @@ A câmera possui uma função muito importante além de capturar a imagem que se
 <br>
 
 ### Comunicação
+A TTGO T-CAMERA cria um Access Point, então o ESP32 se conecta a esse Acess Point, e cria um servidor web e um servidor WebSocket.
+
+- Quando o cliente insere o IP do ESP32 no navegador, é feita uma requisição da página web para o ESP32;
+- O ESP32 response enviando uma página web (HTML, CSS, JS);
+- O navegador do cliente mostra a página recebida, com os controles e com a transmissão de vídeo na câmera estabelecida em outro ip, mas na mesma rede;
+- O código JavaScript estabelece uma comunicação WebSocket com o servidor WebSocket do ESP32;
+- Uma vez que a comunicação WebSocket é estabilizada, toda vez que pressionarmos os botões de direção ou alterarmos os sliders dos servos, o JavaScript envia esses comandos para o ESP32 por meio da comunicação WebSocket;
+- O servidor WebSocket no ESP32 recebe os comandos e realiza os controles de acordo com o que foi recebido.
+
+> O IP do ESP32 pode ser 192.168.4.2 ou 192.168.4.3
+
+<br>
+
+<img src="./assets/diagrama-comunicacao.png" />
+
+#### Porquê utilizamos WebSocket?
+A escolha da utilização de WebSocket se deu pela fluidez da experiência do usuário no projeto. Se não utilizássemos ele, toda vez que quiséssemos mudar a direção do carro, seria necessário recarregar a página, o que prejudicaria muito a experiência.
+
+Com a implementação do WebSocket estabelecemos uma conexão entre a página web e o ESP32, a qual possibilita o envio de comandos para o ESP32 em segundo plano, sem a necessidade de recarregar a página. Consequentemente, o carrinho consegue se movimentar mais suavemente, tornando o controle mais fluido e com resposta em tempo real.
+
 
 
 ## 5. Código
@@ -540,3 +560,5 @@ O que leva ao terceiro ponto de dificuldade do grupo, pois aumentando a quantida
 - Configuração do ambiente de desenvolvimento: https://randomnerdtutorials.com/getting-started-with-esp32/
 - Servo motor: https://esp32io.com/tutorials/esp32-servo-motor
 - Criação da comunicação websocket: https://lastminuteengineers.com/esp32-websocket-tutorial/#uploading-the-code
+https://www.donskytech.com/esp32-robot-car-using-websockets/
+https://esp32io.com/tutorials/esp32-controls-car-via-web
