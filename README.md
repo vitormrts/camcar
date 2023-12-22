@@ -15,6 +15,9 @@
 # WebCar
 > Repositório criado para a documentação do projeto WebCar, desenvolvido durante a matéria de Computação Física e Aplicações, ministrada pelo Professor Doutor Fábio Nakano na Universidade de São Paulo. 
 
+<img align="top" src="./assets/carrinho-1.jpeg" width="200" />
+<img align="top" src="./assets/carrinho-2.jpeg" width="200" />
+
 
 ## 1. Introdução
 
@@ -148,7 +151,7 @@ const char* password = "";
 ~~~
 
 
-### Configuração de Servidor Web
+### Configuração de Servidor Web e WebSocket
 O servidor web é configurado na porta 80 usando a instância AsyncWebServer. Além disso, é definida uma instância de AsyncWebSocket para a comunicação em tempo real com a página web.
 
 ~~~C
@@ -575,7 +578,7 @@ void loop() {
 - Temos constantes PWM para controlar a velocidade dos motores DC.
 - Os comandos enviados pela interface web são interpretados pelo servidor e resultam em ações físicas, como movimento do carro ou ajuste dos servos.
 
-## Considerações finais
+## 6. Considerações finais
 ### Dificuldades encontradas
 O grupo encontrou algumas dificuldades durante o desenvolvimento do projeto. Em um primeiro momento, a intenção do grupo era utilizar apenas o compenente ESP32CAM realizando o papel de subir uma rede WiFi, sendo um AP (*access point*), uma pagína web para receber os comandos do usuário e compartilhar a imagem capturada, além de gerenciar os outros componentes físicos. Porém o grupo não conseguiu fazer os ajustes do ESP32CAM, conseguindo seguir com o projeto apenas com a troca do componente para uma TTGO T-CAMERA ESP32.
 
@@ -583,7 +586,7 @@ Apesar de solucionar um problema, gerou outro, a nova câmera não possui conex�
 
 O que leva ao terceiro ponto de dificuldade do grupo, pois aumentando a quantidade de componentes, aumenta a quantidade de energia necessária, aparentemente o powerbank não está conseguindo fornecer energia suficiente, levando a uma perca de conexão dos componentes e o usuário perdendo a conexão, temporariamente, com a página web. Fizemos um teste fornecendo energia de uma fonte separada (Notebook, via cabo USB) para o ESP32 e do powerbank para o restante dos componentes, onde não observamos esse comportamento de falha, tendo funcionamento íntegro do projeto. 
 
-## Referências
+## 7. Referências
 - Configuração do ambiente de desenvolvimento: https://randomnerdtutorials.com/getting-started-with-esp32/
 - Servo motor: https://esp32io.com/tutorials/esp32-servo-motor
 - Criação da comunicação websocket: https://lastminuteengineers.com/esp32-websocket-tutorial/#uploading-the-code
