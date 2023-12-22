@@ -52,7 +52,7 @@ O WebCar é controlado por meio de uma página web. Com isso, o usuário pode te
 
 ## 4. Organização e Arquitetura
 ### Diagrama de Arquitetura
-<img src="./assets/esquema.png"/>
+<img src="./assets/esquema-v2.png"/>
 
 ### Componentes físicos
 #### ESP32
