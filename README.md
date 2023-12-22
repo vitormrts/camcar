@@ -4,9 +4,10 @@
 ## ACH2157
 ## Escola de Artes, Ciências e Humanidades
 **Autores**
-Juan Kineipe **11894610**
-Ryan Alexsander Forti **126932674**
-Vitor Martins Cruz **11845410**
+
+- Juan Kineipe **11894610**
+- Ryan Alexsander Forti **126932674**
+- Vitor Martins Cruz **11845410**
 
 </center>
 
