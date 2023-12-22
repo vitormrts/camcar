@@ -43,7 +43,7 @@ O WebCar é controlado por meio de uma página web. Com isso, o usuário pode te
 | Roda Boba Nylon          | 1          |
 | Power Bank 5V            | 1          |
 | Chassi MDF               | 2          |
-| Jumpers                  | x          |
+| Jumpers                  | 18         |
 
 ### Requisitos de software
 - Possuir o projeto "clonado" em sua máquina;
