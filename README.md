@@ -76,8 +76,10 @@ O WebCar é controlado por meio de uma página web. Com isso, o usuário pode te
 ## Considerações finais
 ### Dificuldades encontradas
 O grupo encontrou algumas dificuldades durante o desenvolvimento do projeto. Em um primeiro momento, a intenção do grupo era utilizar apenas o compenente ESP32CAM realizando o papel de subir uma rede WiFi, sendo um AP (*access point*), uma pagína web para receber os comandos do usuário e compartilhar a imagem capturada, além de gerenciar os outros componentes físicos. Porém o grupo não conseguiu fazer os ajustes do ESP32CAM, conseguindo seguir com o projeto apenas com a troca do componente para uma TTGO T-CAMERA ESP32.
+
 Apesar de solucionar um problema, gerou outro, a nova câmera não possui conexões suficientes para gerenciar os demais componentes físicos. Com isso, foi necessário adicionar um ESP32, este conecta na rede estabelecida pela câmera e realiza o gerenciamento da página web e componentes físicos.
-O que leva ao terceiro ponto de dificuldade do grupo, pois aumentando a quantidade de componentes, aumenta a quantidade de energia necessária, aparentemente o powerbank não está conseguindo fornecer energia suficiente, levando a uma perca de conexão dos componentes e o usuário perdendo a conexão, temporariamente, com a página web. Pois fornecendo energia de uma fonte separada (Notebook, via cabo USB) para o ESP32 e do powerbank para o restante dos compenentes, não observamos esse comportamento de falha, tendo funcionamento íntegro do projeto. 
+
+O que leva ao terceiro ponto de dificuldade do grupo, pois aumentando a quantidade de componentes, aumenta a quantidade de energia necessária, aparentemente o powerbank não está conseguindo fornecer energia suficiente, levando a uma perca de conexão dos componentes e o usuário perdendo a conexão, temporariamente, com a página web. Fizemos um teste fornecendo energia de uma fonte separada (Notebook, via cabo USB) para o ESP32 e do powerbank para o restante dos componentes, onde não observamos esse comportamento de falha, tendo funcionamento íntegro do projeto. 
 
 ## Referências
 - Configuração do ambiente de desenvolvimento: https://randomnerdtutorials.com/getting-started-with-esp32/
