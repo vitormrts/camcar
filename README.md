@@ -377,6 +377,33 @@ void rotateMotor(int motorNumber, int motorDirection)
 ~~~
 
 **moveCar(int inputValue)**: Controla o movimento do carro com base no valor de entrada recebido, que representa uma direção específica.
+
+Parâmetros:
+   - `inputValue`: Representa o comando de movimento que deve ser executado (`UP`, `DOWN`, `LEFT`, `RIGHT`, `STOP`)
+
+Configuração da velocidade:
+   - `ledcWrite(PWMSpeedChannel, 255);`: Define a velocidade do carro.
+
+Switch-case para os comandos de movimento:
+- Caso `UP`:
+  - Movimentação para frente, onde ambos os motores são configurados para girar para a frente;
+
+- Caso `DOWN`:
+  - Movimentação para trás, onde ambos os motores são configurados para girar para trás;
+
+- Caso `LEFT`:
+  - Movimentação para a esquerda, onde o motor direito gira para trás, enquanto o motor esquerdo gira para frente.
+
+- Caso `RIGHT`:
+  - Movimentação para a direita, onde o motor direito gira para frente, enquanto o motor esquerdo gira para trás.
+
+- Caso `STOP`:
+  - Interrupção do carrinho, onde ambos os motores são configurados para parar.
+
+- Caso padrão (default):
+  - Interrupção do carrinho caso as direções fornecidas não sejam conhecidas.
+
+
 ~~~C
 void moveCar(int inputValue)
 {
@@ -560,5 +587,7 @@ O que leva ao terceiro ponto de dificuldade do grupo, pois aumentando a quantida
 - Configuração do ambiente de desenvolvimento: https://randomnerdtutorials.com/getting-started-with-esp32/
 - Servo motor: https://esp32io.com/tutorials/esp32-servo-motor
 - Criação da comunicação websocket: https://lastminuteengineers.com/esp32-websocket-tutorial/#uploading-the-code
-https://www.donskytech.com/esp32-robot-car-using-websockets/
-https://esp32io.com/tutorials/esp32-controls-car-via-web
+- Criação do carrinho usando ESP32:
+  - https://www.donskytech.com/esp32-robot-car-using-websockets/
+  - https://esp32io.com/tutorials/esp32-controls-car-via-web
+  - https://electronicsinnovation.com/esp32-rc-car/

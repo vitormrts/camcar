@@ -38,13 +38,16 @@ std::vector<MOTOR_PINS> motorPins =
   {15, 22, 23},  // Right motor (EnB, IN3, IN4)
 };
 
+// PWM for velocity motor control
 const int PWMFreq = 1000; /* 1 KHz */
 const int PWMResolution = 8;
 const int PWMSpeedChannel = 2;
 
+// Web server and web socket setup
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
+// HTML Page
 const char index_html[] PROGMEM = R"HTMLHOMEPAGE(
 <!DOCTYPE html>
 <html>
@@ -338,6 +341,7 @@ void setupPins()
 {
   Serial.println("Setup pins...");
 
+  // Setup servo's pins
   bottomServo.attach(BOTTOM_SERVO_PIN);
   topServo.attach(TOP_SERVO_PIN);
 
@@ -369,26 +373,21 @@ void setup(){
   Serial.println(ssid);
   
   // Connect to Wi-Fi
-  // WiFi.begin(ssid, password);
+  WiFi.begin(ssid, password);
   
-  // while (WiFi.status() != WL_CONNECTED) {
-  //   delay(1000);
-  //   Serial.print(".");
-  // }
+  while (WiFi.status() != WL_CONNECTED) {
+     delay(1000);
+     Serial.print(".");
+   }
   
-  // Serial.println("");
-  // Serial.println("Connected..!");
-  // Serial.print("Got IP: ");  Serial.println(WiFi.localIP());
-
-  WiFi.softAP(ssid, password);
-
-  IPAddress IP = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(IP);
+  Serial.println("");
+  Serial.println("Connected..!");
+  Serial.print("Got IP: ");  Serial.println(WiFi.localIP());
 
   ws.onEvent(webSocketEventHandler);
   server.addHandler(&ws);
 
+  // Create HTTP GET HTML index page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", index_html);
   });
