@@ -28,7 +28,6 @@ O projeto implementa um servidor web em um dispositivo ESP32, permitindo o contr
 
 ## 2. Funcionalidades
 O WebCar é controlado por meio de uma página web. Com isso, o usuário pode ter acesso as seguintes funcionalidades:
-- Controle velocidade do carrinho;
 - Alteração da direção do carrinho (frente, ré, esquerda e direita);
 - Alteração do ângulo de visualização da câmera por meio de dois dois servos (horizontal e vertical);
 - Transmissão da imagem da câmera.
