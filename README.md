@@ -4,7 +4,7 @@
 ## ACH2157
 ## Escola de Artes, Ciências e Humanidades
 **Autores**
-Juan
+Juan Kineipe **11894610**
 Ryan Alexsander Forti **126932674**
 Vitor Martins Cruz **11845410**
 
@@ -51,25 +51,34 @@ O WebCar é controlado por meio de uma página web. Com isso, o usuário pode te
 
 ## 4. Organização e Arquitetura
 ### Diagrama de Arquitetura
-<img src="./assets/esquema.png" />
+<img src="./assets/esquema.png"/>
 
 ### Componentes físicos
 - **ESP32**
-
+<img src="./assets/esp32.jpg">
+Simplificadamente, é a placa principal do projeto, o ESP32 possui o maior código e mais funções no projeto, tendo responsabilidade de conectar na rede Wifi gerada pela câmera, a partir desta conexão, cria uma página web com a imagem transmitida pela câmera e os botões, esses serão o modo que o usuário utilizará para interagir o carrinho, pois o ESP32 recebe o comando dos botões e com isso envia o sinal para os motores (DC) e servos motores.
+<br>
 
 - **Ponte H**
-
+<img src="./assets/ponteh.jpg">
+<br>
+Esse componente,Driver Motor Ponte H, é responsável por receber os sinais enviados pelo ESP32 e controlar os motores. Para isso, usamos as portas OUT para energia dos motores, os inputs e enables para gerenciamento o "esp" identifcar para qual motor está mandando sinal.
+<br>
 
 - **Servos Motores**
-
+<img src="./assets/servomotor.jpg">
+<br>
+No projeto utilizamos um conjunto de dois servos motores com bases de pláticos formando um "braço mecânico", tendo a função de realizar movimentação da camêra, para ajustar a visão fornecida ao usuário. Para isso o usuário realiza o ajuste pela página web e o ESP32 repasse o comandos para os servos.
+<br>
 
 - **TTGO T-CAMERA ESP32**
-
-### Conexões
+<img src="./assets/ttgocamera.jpg">
+<br>
+A câmera possui uma função muito importante além de capturar a imagem que será a visualização do usuário em um sentido de POV (*Point Of View*) do carrinho, ou seja, o usuário possui a visão como se estivesse no carrinho. A outra função da câmera é iniciar a rede Wifi a qual o ESP32 se conecta para cria a interface de interação do usuário.
+<br>
 
 ### Comunicação
 
-### Bibliotecas externas
 
 ## 5. Código
 ### Bibliotecas
